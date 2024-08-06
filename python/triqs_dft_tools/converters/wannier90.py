@@ -321,7 +321,8 @@ class Wannier90Converter(ConverterTools):
                 things_to_save = ['energy_unit', 'n_k', 'k_dep_projection', 'SP', 'SO', 'charge_below', 'density_required',
                               'symm_op', 'n_shells', 'shells', 'n_corr_shells', 'corr_shells', 'use_rotations', 'rot_mat',
                               'rot_mat_time_inv', 'n_reps', 'dim_reps', 'T', 'n_orbitals', 'proj_mat', 'bz_weights', 'hopping',
-                              'n_inequiv_shells', 'corr_to_inequiv', 'inequiv_to_corr', 'kpt_weights', 'kpts', 'dft_code']
+                              'r_vector', 'r_degeneracy', 'n_inequiv_shells', 'corr_to_inequiv', 'inequiv_to_corr',
+                              'kpt_weights', 'kpts', 'dft_code']
                 if wan_centres is not None:
                     things_to_save.append('wan_centres')
                 if self.bloch_basis:

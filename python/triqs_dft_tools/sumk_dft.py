@@ -865,11 +865,11 @@ class SumkDFT(object):
                          List of inequivalent shells to be analysed.
                          If include_shells is not provided all inequivalent shells will be analysed.
         dm : list of dict, optional
-             List of density matrices from which block stuctures are to be analysed.
+             List of density matrices from which block structures are to be analysed.
              Each density matrix is a dict {block names: 2d numpy arrays} for each correlated shell.
              If not provided, dm will be calculated from the DFT Hamiltonian by a simple-point BZ integration.
         hloc : list of dict, optional
-               List of local Hamiltonian matrices from which block stuctures are to be analysed
+               List of local Hamiltonian matrices from which block structures are to be analysed
                Each Hamiltonian is a dict {block names: 2d numpy arrays} for each inequivalent shell.
                If not provided, it will be calculated using eff_atomic_levels.
         """
@@ -907,6 +907,7 @@ class SumkDFT(object):
                         if dmbool[i, j] or hlocbool[i, j]:
                             offdiag.add((i, j))
 
+                # FIXME what is this?
                 # Determine the number of non-hybridising blocks in the gf
                 blocs = [[i] for i in range(n_orb)]
                 while len(offdiag) != 0:
