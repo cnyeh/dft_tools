@@ -128,7 +128,7 @@ class Wannier90Converter(ConverterTools):
             ConverterTools.repack(self)
 
 
-    def convert_dft_input(self):
+    def convert_dft_input(self, dft_outdir=""):
         """
         Reads the appropriate files and stores the data for the
 
@@ -197,7 +197,7 @@ class Wannier90Converter(ConverterTools):
         if self.bloch_basis:
             misc_results = None
             if mpi.is_master_node():
-                misc_results = read_misc_input(self.w90_seed, n_spin_blocks, n_k)
+                misc_results = read_misc_input(self.w90_seed, n_spin_blocks, n_k, dft_outdir)
             f_weights, band_window, fermi_energy, kpt_basis = mpi.bcast(misc_results)
 
             # Get density from k-point weighted average and sum over all spins and bands
@@ -898,7 +898,7 @@ def build_kmesh(kmesh_size, kmesh_mode=0):
     return n_k, kpts, kpt_weights
 
 
-def read_misc_input(w90_seed, n_spin_blocks, n_k):
+def read_misc_input(w90_seed, n_spin_blocks, n_k, dft_outdir=""):
     """
     Reads input from DFT code calculations to get occupations, the band window,
     the Fermi energy and the basis for the k points.
@@ -911,6 +911,8 @@ def read_misc_input(w90_seed, n_spin_blocks, n_k):
         SP + 1 - SO
     n_k : int
         Number of k points
+    dft_outdir : str
+        Directory for the DFT outputs
 
     Returns
     -------
@@ -923,12 +925,12 @@ def read_misc_input(w90_seed, n_spin_blocks, n_k):
     kpt_basis: np.ndarray[3, 3]
         the basis vectors in reciprocal space
     """
-    w90_seed_dir = os.path.dirname(w90_seed)
-    # FIXME read xml file instead
-    xml_filename = w90_seed + '.xml'
-    nnkp_filename = w90_seed + '.nnkp'
+    w90_seed_dir = os.path.dirname(w90_seed) if dft_outdir == "" else dft_outdir
+    xml_filename = os.path.join(w90_seed_dir, w90_seed + '.xml')
     locproj_filename = os.path.join(w90_seed_dir, 'LOCPROJ')
     outcar_filename = os.path.join(w90_seed_dir, 'OUTCAR')
+
+    nnkp_filename = w90_seed + '.nnkp'
 
     if os.path.isfile(xml_filename):
         read_from = 'qe'
