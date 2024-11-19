@@ -924,14 +924,15 @@ def read_misc_input(w90_seed, n_spin_blocks, n_k):
         the basis vectors in reciprocal space
     """
     w90_seed_dir = os.path.dirname(w90_seed)
-    nscf_filename = w90_seed + '.nscf.out'
+    # FIXME read xml file instead
+    xml_filename = w90_seed + '.xml'
     nnkp_filename = w90_seed + '.nnkp'
     locproj_filename = os.path.join(w90_seed_dir, 'LOCPROJ')
     outcar_filename = os.path.join(w90_seed_dir, 'OUTCAR')
 
-    if os.path.isfile(nscf_filename):
+    if os.path.isfile(xml_filename):
         read_from = 'qe'
-        mpi.report('Reading DFT band occupations from Quantum Espresso output {}'.format(nscf_filename))
+        mpi.report('Reading DFT band occupations from Quantum Espresso output {}'.format(xml_filename))
     elif os.path.isfile(locproj_filename) and os.path.isfile(outcar_filename):
         read_from = 'vasp'
         mpi.report('Reading DFT band occupations from Vasp output {}'.format(locproj_filename))
@@ -947,40 +948,11 @@ def read_misc_input(w90_seed, n_spin_blocks, n_k):
     kpt_basis = np.zeros((3, 3))
 
     if read_from == 'qe':
-        occupations = []
-        with open(nscf_filename,'r') as out_file:
-            out_data = out_file.readlines()
-        # Reads number of Kohn-Sham states and Fermi energy
-        for line in out_data:
-            if 'number of Kohn-Sham states' in line:
-                n_ks = int(line.split()[-1])
-            elif 'the Fermi energy is' in line:
-                fermi_energy = float(line.split()[-2])
-            elif 'reciprocal axes' in line:
-                reading_kpt_basis = True
-                continue
-            elif reading_kpt_basis and lines_read_kpt_basis < 3:
-                kpt_basis[lines_read_kpt_basis, :] = line.split()[3:6]
-                lines_read_kpt_basis +=1
+        from .qe.qe_io import read_qe_misc_data
+        
+        symwan_isym = w90_seed + '.isym'
+        n_ks, fermi_energy, kpt_basis, occupations = read_qe_misc_data(xml_filename, nnkp_filename, symwan_isym)
 
-            # get occupations
-        for ct, line in enumerate(out_data):
-            if line.strip() == 'End of band structure calculation':
-                break
-
-        assert 'k =' in out_data[ct + 2], 'Cannot read occupations. Set verbosity = "high" in {}'.format(nscf_filename)
-        out_data = out_data[ct+2:]
-
-        # block size of eigenvalues + occupations per k-point
-        n_block = int(2*np.ceil(n_ks/8)+5)
-
-        for ik in range(n_k):
-            # get data
-            k_block = [line.split() for line in out_data[ik*n_block+2:ik*n_block+n_block-1]]
-            # second half corresponds to occupations
-            occs = k_block[int(len(k_block)/2)+1:]
-            flattened_occs = [float(item) for sublist in occs for item in sublist]
-            occupations.append(flattened_occs)
     else:
         # Reads LOCPROJ
         with open(locproj_filename, 'r') as file:
