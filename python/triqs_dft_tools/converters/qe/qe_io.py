@@ -28,7 +28,6 @@ import numpy as np
 import xml.etree.ElementTree as ET
 
 from scipy.constants import physical_constants
-HARTREE_EV = physical_constants['Hartree energy in eV'][0]
 
 
 def read_qe_misc_data(qe_xml_file, file_nnkp=None, file_isym=None):
@@ -60,6 +59,9 @@ def read_qe_misc_data(qe_xml_file, file_nnkp=None, file_isym=None):
     occs : numpy.ndarray(nkpts_full, nbnd)
         K-dependent occupations from DFT
     """
+
+    HARTREE_EV = physical_constants['Hartree energy in eV'][0]
+    
     # Load and parse the XML file
     mpi.report("--------------------------------------------")
     mpi.report(f"*** Reading QE misc data from {qe_xml_file}")
@@ -67,7 +69,7 @@ def read_qe_misc_data(qe_xml_file, file_nnkp=None, file_isym=None):
     tree = ET.parse(qe_xml_file)
     root = tree.getroot()
     bs_node = root.find("output/band_structure")
-
+    
     # Metadata
     lsda = parse_bool(bs_node.find('lsda').text)
     nspin = 2 if lsda else 1
