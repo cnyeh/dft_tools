@@ -74,12 +74,14 @@ def read_qe_misc_data(qe_xml_file, file_nnkp=None, file_isym=None):
     lsda = parse_bool(bs_node.find('lsda').text)
     nspin = 2 if lsda else 1
     nbnd = int(bs_node.find('nbnd').text)
-    mp_grid = np.zeros(3, dtype=int)
-    mp_grid_att = bs_node.find('starting_k_points/monkhorst_pack').attrib
-    for i in range(3):
-        mp_grid[i] = mp_grid_att[f'nk{i + 1}']
-    nkpts = mp_grid[0] * mp_grid[1] * mp_grid[2]
     nkpts_ibz = int(bs_node.find('nks').text)
+    mp_grid_node = bs_node.find('starting_k_points/monkhorst_pack')
+    if mp_grid_node is not None:       # kpoints are set via the automatic mode
+        mp_grid = mp_grid_node.attrib
+        nkpts = int(mp_grid['nk1']) * int(mp_grid['nk2']) * int(mp_grid['nk3'])
+    else:                              # a list of kpoints is provided explicitly 
+        nkpts = len(bs_node.findall("ks_energies"))
+
     fermi = float(bs_node.find('fermi_energy').text) * HARTREE_EV
 
     mpi.report(f"nspin, nbnd, nkpts, nkpts_ibz : {nspin}, {nbnd}, {nkpts}, {nkpts_ibz}\n")
